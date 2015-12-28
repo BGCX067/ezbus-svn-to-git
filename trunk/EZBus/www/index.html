@@ -1,0 +1,259 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>服务路由表</title>
+<script type="text/javascript" src="js/jquery/jquery.min.js"></script>
+<script type="text/javascript" src="js/jquery/jquery.easyui.min.js"></script>
+<script type="text/javascript" src="js/jquery/jquery.json.min.js"></script>
+<link rel="stylesheet" type="text/css"
+	href="css/themes/default/easyui.css">
+<link rel="stylesheet" type="text/css" href="css/themes/icon.css">
+</head>
+<body>
+	<table id="dg" class="easyui-datagrid" title="服务路由表"
+		style="height:400px"
+		data-options="
+				iconCls: 'icon-edit',
+				singleSelect: true,
+				toolbar: '#tb',
+				url: 'services/router/list/',
+				method: 'get',
+				onClickRow: onClickRow,
+				onDblClickRow: modifyRow,
+				pagination:true,
+				pageSize:10,
+				loadFilter:pagerFilter
+			">
+		<thead>
+			<tr>
+				<th data-options="field:'id',width:50">ID</th>
+				<th data-options="field:'projectName',width:80">项目名</th>
+				<th data-options="field:'serviceName',width:350">服务名</th>
+				<th data-options="field:'serviceUrl',width:480">服务URL</th>
+			</tr>
+		</thead>
+	</table>
+	<div id="tb" style="height:auto">
+		<a href="javascript:void(0)" class="easyui-linkbutton"
+			data-options="iconCls:'icon-add',plain:true" onclick="append()">增加</a>
+		<a href="javascript:void(0)" class="easyui-linkbutton"
+			data-options="iconCls:'icon-remove',plain:true" onclick="remove1()">删除</a>
+		&nbsp;&nbsp;&nbsp;
+		<input class="easyui-searchbox"
+			data-options="prompt:'输入部分服务名搜索',searcher:doSearch"
+			style="width:150px"></input>
+	</div>
+	<div id="w" class="easyui-window" title="服务路由编辑"
+		data-options="iconCls:'icon-save',modal:true,closed:true"
+		style="width:300px;height:250px;padding:10px;">
+		<div style="padding:10px 0 10px 10px">
+			<form id="ff" method="post">
+				<table>
+					<tr>
+						<td>编号:</td>
+						<td><input class="easyui-validatebox" type="text" name="id"
+							id="id" readonly="readonly"></input></td>
+					</tr>
+					<tr>
+						<td>项目名:</td>
+						<td><input class="easyui-validatebox" type="text"
+							name="projectName" id="projectName" data-options="required:true"></input>
+						</td>
+					</tr>
+					<tr>
+						<td>服务名:</td>
+						<td><input class="easyui-validatebox" type="text"
+							name="serviceName" id="serviceName" data-options="required:true"></input>
+						</td>
+					</tr>
+					<tr>
+						<td>服务地址:</td>
+						<td><input class="easyui-validatebox" type="text"
+							name="serviceUrl" id="serviceUrl" data-options="required:true"></input>
+						</td>
+					</tr>
+
+				</table>
+			</form>
+		</div>
+		<div style="text-align:center;padding:5px">
+			<a href="javascript:void(0)" class="easyui-linkbutton"
+				onclick="submitForm()">保存</a> <a href="javascript:void(0)"
+				class="easyui-linkbutton" onclick="clearForm(true)">清空</a>
+		</div>
+	</div>
+
+	<script type="text/javascript">
+		var editIndex = undefined;
+		function endEditing() {
+			if (editIndex == undefined) {
+				return true
+			}
+			if ($('#dg').datagrid('validateRow', editIndex)) {
+				//var ed = $('#dg').datagrid('getEditor', {index:editIndex,field:'productid'});
+				//var productname = $(ed.target).combobox('getText');
+				//$('#dg').datagrid('getRows')[editIndex]['productname'] = productname;
+				$('#dg').datagrid('endEdit', editIndex);
+				editIndex = undefined;
+				return true;
+			} else {
+				return false;
+			}
+		}
+		function onClickRow(index) {
+			if (editIndex != index) {
+				if (endEditing()) {
+					$('#dg').datagrid('selectRow', index).datagrid('beginEdit',
+							index);
+					editIndex = index;
+				} else {
+					$('#dg').datagrid('selectRow', editIndex);
+				}
+			}
+		}
+		function modifyRow(index, rowData) {
+			$('#id').attr('value', rowData.id);
+			$('#projectName').attr('value', rowData.projectName);
+			$('#serviceName').attr('value', rowData.serviceName);
+			$('#serviceUrl').attr('value', rowData.serviceUrl);
+			$('#w').window('open');
+
+		}
+		function append() {
+			clearForm();
+			$('#w').window('open');
+		}
+		function remove1() {
+			if (editIndex == undefined) {
+				return
+			}
+			var id = $('#dg').datagrid('getRows')[editIndex]['id'];
+			deleteOne(id);
+
+			editIndex = undefined;
+		}
+		function accept() {
+			if (endEditing()) {
+				$('#dg').datagrid('acceptChanges');
+			}
+		}
+		function reject() {
+			$('#dg').datagrid('rejectChanges');
+			editIndex = undefined;
+		}
+		function getChanges() {
+			var rows = $('#dg').datagrid('getChanges');
+			alert(rows.length + ' rows are changed!');
+		}
+		function insertNew(sr) {
+			var srJson = $.toJSON(sr);
+			$.ajax({
+				url : "services/router/add",
+				type : "POST",
+				contentType : "application/json",
+				data : srJson,
+				success : reload
+			});
+		}
+		function deleteOne(sr) {
+
+			$.ajax({
+				url : "services/router/delete/" + sr,
+				type : "GET",
+				success : reload
+			});
+		}
+		function updateOne(sr) {
+			var srJson = $.toJSON(sr);
+			$.ajax({
+				url : "services/router/update",
+				type : "POST",
+				contentType : "application/json",
+				data : srJson,
+				success : reload
+			});
+		}
+		function insertOrUpdate(sr) {
+			if (sr.id) {
+				updateOne(sr);
+			} else {
+				insertNew(sr);
+			}
+		}
+		function reload(msg) {
+			if (!msg) {
+				alert("提交出错");
+			}
+			$('#dg').datagrid('reload');
+		}
+		function clearForm(remainId) {
+			var id='';
+			if(remainId){
+				id=$('#id').attr('value');
+			}
+			$('#ff').form('clear');
+			$('#id').attr('value', id);
+		}
+		function submitForm() {
+			if ($('#ff').form('validate')) {
+				var sr = {}
+				sr.id = $('#id').attr('value');
+				sr.projectName = $('#projectName').attr('value');
+				sr.serviceName = $('#serviceName').attr('value');
+				sr.serviceUrl = $('#serviceUrl').attr('value');
+				insertOrUpdate(sr);
+				$('#w').window('close');
+			} else {
+				alert("请输入必要的内容！");
+			}
+		}
+		function doSearch(value) {
+			if (value) {
+				value = encodeURI(value);
+				$('#dg').datagrid({
+					url : 'services/router/query/' + value + '/'
+				});
+				
+			}else{
+				$('#dg').datagrid({
+					url : 'services/router/list/'
+				});
+			}
+			$('#dg').datagrid('getPager').pagination('select',1);
+			//$('#dg').datagrid('reload');
+		}
+
+		function pagerFilter(data) {
+			if (typeof data.length == 'number'
+					&& typeof data.splice == 'function') { // is array
+				data = {
+					total : data.length,
+					rows : data
+				}
+			}
+			var dg = $(this);
+			var opts = dg.datagrid('options');
+			var pager = dg.datagrid('getPager');
+			pager.pagination({
+				onSelectPage : function(pageNum, pageSize) {
+					opts.pageNumber = pageNum;
+					opts.pageSize = pageSize;
+					pager.pagination('refresh', {
+						pageNumber : pageNum,
+						pageSize : pageSize
+					});
+					dg.datagrid('loadData', data);
+				}
+			});
+			if (!data.originalRows) {
+				data.originalRows = (data.rows);
+			}
+			var start = (opts.pageNumber - 1) * parseInt(opts.pageSize);
+			var end = start + parseInt(opts.pageSize);
+			data.rows = (data.originalRows.slice(start, end));
+			return data;
+		}
+	</script>
+</body>
+</html>

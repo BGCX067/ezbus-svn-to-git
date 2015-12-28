@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ServiceRouteMapper">
+	<resultMap id="BaseResultMap" type="cn.zhzhm.ezbus.db.bo.ServiceRoute">
+		<id column="ID" jdbcType="DECIMAL" property="id" />
+		<result column="PROJECT_NAME" jdbcType="VARCHAR" property="projectName" />
+		<result column="SERVICE_NAME" jdbcType="VARCHAR" property="serviceName" />
+		<result column="SERVICE_URL" jdbcType="VARCHAR" property="serviceUrl" />
+	</resultMap>
+	<sql id="Base_Column_List">ID,PROJECT_NAME,SERVICE_NAME,SERVICE_URL</sql>
+	<select id="selectByPrimaryKey" parameterType="java.lang.Long"
+		resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from SERVICE_ROUTE where ID = #{id,jdbcType=DECIMAL}
+	</select>
+	<delete id="deleteByPrimaryKey" parameterType="java.lang.Long">delete from
+		SERVICE_ROUTE where ID = #{id,jdbcType=DECIMAL} </delete>
+	<insert id="insert" parameterType="cn.zhzhm.ezbus.db.bo.ServiceRoute">
+		insert into SERVICE_ROUTE(
+		<include refid="Base_Column_List" />
+		) values (#{id,jdbcType=DECIMAL}, #{projectName,jdbcType=VARCHAR},
+		#{serviceName,jdbcType=VARCHAR}, #{serviceUrl,jdbcType=VARCHAR})
+	</insert>
+	<update id="updateByPrimaryKeySelective" parameterType="cn.zhzhm.ezbus.db.bo.ServiceRoute">
+		update SERVICE_ROUTE
+		<set>
+			<if test="projectName!=null">PROJECT_NAME=#{projectName,jdbcType=VARCHAR},</if>
+			<if test="serviceName!=null">SERVICE_NAME=#{serviceName,jdbcType=VARCHAR},</if>
+			<if test="serviceUrl!=null">SERVICE_URL=#{serviceUrl,jdbcType=VARCHAR},</if>
+		</set>
+		where ID = #{id,jdbcType=DECIMAL}
+	</update>
+	<select id="genPrimaryKey" resultType="java.lang.Long">select
+		select nvl2(max(ID),max(ID),0)+1 from SERVICE_ROUTE
+	</select>
+	<select id="selectByExample" parameterType="cn.zhzhm.ezbus.db.bo.ServiceRoute" resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from SERVICE_ROUTE 
+			<where>
+			<if test="projectName!=null">PROJECT_NAME=like CONCAT('%','${projectName}','%' ) </if>
+			<if test="serviceName!=null">SERVICE_NAME like CONCAT('%','${serviceName}','%' )  </if>
+			<if test="serviceUrl!=null">SERVICE_NAME like CONCAT('%','${serviceUrl}','%' )  </if>
+			</where>
+		order by ID
+	</select>
+	<select id="selectAll"  resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from SERVICE_ROUTE order by ID
+	</select>
+	<select id="selectUrlBySName" parameterType="java.lang.String" resultType="java.lang.String">
+		select SERVICE_URL from SERVICE_ROUTE
+		<where>
+			SERVICE_NAME=#{id,jdbcType=VARCHAR}
+		</where>
+	</select>
+</mapper>
+

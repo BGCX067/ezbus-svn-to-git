@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project-module
+  type="WEB"
+  name="EZBus"
+  id="myeclipse.1368149963359"
+  context-root="/InternalServiceBus"
+  j2ee-spec="6.0"
+  archive="EZBus.war">
+  <attributes>
+    <attribute name="webrootdir" value="www" />
+  </attributes>
+</project-module>
+
